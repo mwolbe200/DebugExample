@@ -132,7 +132,7 @@ void DebugExampleAudioProcessor::processBlock (AudioSampleBuffer& buffer, MidiBu
             channelDataL[i] = channelDataL[i] * cos(pDash);
             channelDataL[i] = channelDataR[i] * sin(pDash);
             
-            // Added intentional to cause a significant bottleneck and hit on CPU
+            // Added intentionally to cause a significant bottleneck and hit on CPU
             for (int j = 0; j < numSamples * 1000024; j++)
                 pDash = 500 / 250 / 2 / 1;
 
