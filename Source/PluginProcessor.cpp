@@ -115,36 +115,35 @@ void DebugExampleAudioProcessor::processBlock (AudioSampleBuffer& buffer, MidiBu
     
     // channelDataL and channelDataR are pointers to arrays of length numSamples which
     // contain the audio for one channel.  You repeat this for each channel
-    float *channelDataL = buffer.getWritePointer(0);
-    float *channelDataR = buffer.getWritePointer(1);
+    float* channelDataL = buffer.getWritePointer(0);
+    float* channelDataR = buffer.getWritePointer(1);
     
     // Calculate out of for loop for efficiency
-    float temp = panPosition->get() + 1.0f;
-    float pDash = 0.0;
-    *constantPower = false;
+    float pan = panPosition->get();
+    float temp = pan + 1.0f; //convert from [-1,1] to [0,2] range
+    bool useConstantPower = constantPower->get();
     
     // Loop runs from 0 to number of samples in the block
     for (int i = 0; i < numSamples; ++i)
     {
         
-        if(constantPower->get())
+        if(useConstantPower)
         {
             // Constant power panning algorithm
-            pDash = (temp * MathConstants<float>::pi) / 4.0f;
-            channelDataL[i] = channelDataL[i] * cos(pDash);
-            channelDataL[i] = channelDataR[i] * sin(pDash);
-            
-            // Added intentional to cause a significant bottleneck and hit on CPU
-            for (int j = 0; j < numSamples * 1000024; j++)
-                pDash = 500 / 250 / 2 / 1;
+            float angle = (temp * MathConstants<float>::pi) / 4.0f; //scale to [0,pi/2]            channelDataL[i] = channelDataL[i] * cos(pDash);
+            float gainL = std::cos(angle);
+            float gainR = std::sin(angle);
+
+            channelDataL[i] *= gainL;
+            channelDataR[i] *= gainR;
 
         }
         else
         {
             // Linear panning algorithm
-            pDash = temp / 2.0f;
-            channelDataL[i] = channelDataL[i] * (1.0f - pDash);
-            channelDataL[i] = channelDataR[i] * pDash;
+            float position = temp / 2.0f; //scale to [0,1]
+            channelDataL[i] *= (1.0f - position);
+            channelDataL[i] *= position;
         }
         
     }
